@@ -1,0 +1,8 @@
+Ticker,Company,Revenue_Billion_USD,Net_Income_Billion_USD,YoY_Growth_Pct,PE_Ratio,Operating_Margin_Pct,Market_Cap_Billion_USD,Free_Cash_Flow_Billion_USD
+MSFT,Microsoft Corp,245.1,88.1,15.2,34.2,42.5,3120.0,74.1
+AAPL,Apple Inc,385.6,100.4,6.1,31.8,30.7,3410.0,108.8
+GOOGL,Alphabet Inc,307.4,73.8,13.8,24.5,31.2,2150.0,69.5
+AMZN,Amazon.com Inc,574.8,30.4,12.5,41.6,9.1,1980.0,36.8
+NVDA,NVIDIA Corp,120.8,60.9,122.4,52.3,61.8,3020.0,52.0
+META,Meta Platforms,134.9,39.1,16.0,26.4,38.2,1450.0,43.0
+TSLA,Tesla Inc,96.8,15.0,8.2,58.7,9.2,780.0,4.4
