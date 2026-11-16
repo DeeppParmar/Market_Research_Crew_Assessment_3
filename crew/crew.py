@@ -11,6 +11,7 @@ from crew.agents import (
     create_analyst_agent,
     create_writer_agent,
     get_configured_llm,
+    ensure_env_key,
 )
 from crew.tasks import (
     create_research_task,
@@ -36,6 +37,7 @@ class MarketResearchCrew:
         benchmarks_path: str = "benchmarks.json",
         output_pdf_path: str = "output/market_report.pdf",
     ):
+        ensure_env_key()
         self.query = query
         self.csv_path = csv_path
         self.benchmarks_path = benchmarks_path
@@ -61,20 +63,25 @@ class MarketResearchCrew:
 
     def _build_hierarchical_crew(self) -> Crew:
         """Configures the Crew with manager_llm and sets process=Process.hierarchical."""
-        manager = self.configured_llm if self.configured_llm else self.model_name
         return Crew(
             agents=[self.researcher, self.analyst, self.writer],
             tasks=[self.research_task, self.analysis_task, self.writing_task],
             process=Process.hierarchical,
-            manager_llm=manager,
+            manager_llm=self.configured_llm,
             verbose=True,
         )
 
     def _should_use_real_crew(self) -> bool:
         """Determines if a valid external API key is present for live CrewAI execution."""
         mock_mode = os.getenv("MOCK_EXECUTION", "false").lower() in ("true", "1", "yes")
-        api_key = os.getenv("OPENAI_API_KEY")
-        return bool(api_key and api_key.strip() and not mock_mode)
+        api_key = os.getenv("OPENAI_API_KEY", "")
+        is_real_key = bool(
+            api_key
+            and not api_key.startswith("mock-")
+            and not api_key.startswith("your_")
+            and len(api_key.strip()) > 15
+        )
+        return is_real_key and not mock_mode
 
     def _execute_simulated_hierarchical_workflow(self) -> str:
         """Executes hierarchical supervisor delegation pipeline deterministically for testing/eval."""
