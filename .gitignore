@@ -16,6 +16,7 @@ env/
 
 # Data outputs & logs (keep sample_outputs versioned)
 output/
+data/active_sector_financials.csv
 market_report.pdf
 benchmarks.json
 *.log

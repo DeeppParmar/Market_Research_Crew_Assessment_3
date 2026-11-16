@@ -21,8 +21,8 @@ def parse_args():
     parser.add_argument(
         "--csv",
         type=str,
-        default="data/mock_financials.csv",
-        help="Path to CSV dataset containing financial metrics",
+        default=None,
+        help="Path to CSV dataset containing financial metrics (defaults to auto-generated sector dataset matching query)",
     )
     parser.add_argument(
         "--output",
@@ -52,7 +52,7 @@ def main():
     print("  CREWAI MULTI-AGENT MARKET RESEARCH & REPORT GENERATOR")
     print("=" * 75)
     print(f"Target Query       : {args.query}")
-    print(f"Financial Dataset  : {args.csv}")
+    print(f"Financial Dataset  : {args.csv or 'Auto-Resolved Sector Matrix'}")
     print(f"Output PDF Report  : {args.output}")
     print(f"Benchmarks Log     : {args.benchmarks}")
     print("=" * 75)

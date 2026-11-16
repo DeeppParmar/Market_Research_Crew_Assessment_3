@@ -222,6 +222,23 @@ class PDFReportGenerator:
         )
         return banner_table
 
+    def _get_constituents_summary(self, csv_path: str = "data/mock_financials.csv") -> str:
+        """Returns a formatted string of constituent companies and tickers from the dataset."""
+        target_path = csv_path
+        if not os.path.exists(target_path):
+            alt_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "mock_financials.csv")
+            if os.path.exists(alt_path):
+                target_path = alt_path
+
+        try:
+            df = pd.read_csv(target_path)
+            if "Company" in df.columns and "Ticker" in df.columns:
+                constituents = [f"{row['Company']} ({row['Ticker']})" for _, row in df.iterrows()]
+                return f"<b>Constituent Companies Analyzed (N={len(df)}):</b> " + ", ".join(constituents)
+        except Exception:
+            pass
+        return ""
+
     def _build_pandas_table(self, csv_path: str = "data/mock_financials.csv") -> Table:
         """Parses corporate metrics CSV with Pandas and renders styled tabular grid."""
         if not os.path.exists(csv_path):
@@ -339,6 +356,7 @@ class PDFReportGenerator:
         query: str,
         report_markdown: str,
         csv_path: str = "data/mock_financials.csv",
+        sector_name: Optional[str] = None,
     ) -> str:
         """Assembles and renders the full PDF report with header banner, tables, and copy."""
         # Ensure target directory exists
@@ -368,10 +386,14 @@ class PDFReportGenerator:
 
         # 3. Tabular Grid rendering Pandas summary statistics
         elements.append(Spacer(1, 14))
-        elements.append(Paragraph("Audited Corporate Financial Metrics (Pandas Statistical Summary)", self.styles["SectionHeading"]))
+        display_sector = sector_name or query
+        elements.append(Paragraph(
+            f"Audited Corporate Financial Metrics: {html.escape(display_sector)} (Pandas Statistical Summary)",
+            self.styles["SectionHeading"],
+        ))
         elements.append(HRFlowable(width="100%", thickness=0.8, color=colors.HexColor("#0284C7"), spaceAfter=8))
         elements.append(Paragraph(
-            "The following quantitative matrix was computed via the Financial Data Analyst agent using <code>pandas.describe()</code> on audited company filings, aggregating revenue scale, profitability margins, valuation multiples, and free cash flows across target sector constituents:",
+            f"The following quantitative matrix was computed via the Financial Data Analyst agent using <code>pandas.describe()</code> on audited company filings for <b>{html.escape(display_sector)}</b>, aggregating revenue scale, profitability margins, valuation multiples, and free cash flows across target sector constituents:",
             self.styles["BodyDark"]
         ))
         elements.append(Spacer(1, 6))
@@ -379,6 +401,11 @@ class PDFReportGenerator:
         try:
             pandas_table = self._build_pandas_table(csv_path=csv_path)
             elements.append(pandas_table)
+
+            constituents_text = self._get_constituents_summary(csv_path=csv_path)
+            if constituents_text:
+                elements.append(Spacer(1, 6))
+                elements.append(Paragraph(constituents_text, self.styles["BodyDark"]))
         except Exception as e:
             elements.append(Paragraph(f"<i>Error rendering financial table: {e}</i>", self.styles["BodyDark"]))
 

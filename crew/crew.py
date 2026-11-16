@@ -21,6 +21,7 @@ from crew.tasks import (
 from crew.tools import calculate_financial_metrics, search_and_scrape_market_data
 from crew.benchmarks import BenchmarkTracker
 from crew.pdf_generator import PDFReportGenerator
+from crew.dataset_generator import resolve_sector_dataset
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -32,17 +33,22 @@ class MarketResearchCrew:
     def __init__(
         self,
         query: str = "Tech Sector Q3 Analysis",
-        csv_path: str = "data/mock_financials.csv",
+        csv_path: Optional[str] = None,
         manager_llm_model: Optional[str] = None,
         benchmarks_path: str = "benchmarks.json",
         output_pdf_path: str = "output/market_report.pdf",
     ):
         ensure_env_key()
         self.query = query
-        self.csv_path = csv_path
         self.benchmarks_path = benchmarks_path
         self.output_pdf_path = output_pdf_path
         self.tracker = BenchmarkTracker(output_file=benchmarks_path)
+        
+        # Dynamically resolve sector dataset tailored to query
+        self.csv_path, self.sector_name = resolve_sector_dataset(
+            query=self.query,
+            base_csv_path=csv_path,
+        )
         
         # Configure LLMs
         self.model_name = manager_llm_model or os.getenv("LLM_MODEL") or os.getenv("OPENAI_MODEL_NAME", "gemini/gemini-3.1-flash-lite")
@@ -182,6 +188,7 @@ Using audited financial filings processed through the Pandas analytical pipeline
             query=self.query,
             report_markdown=report_text,
             csv_path=self.csv_path,
+            sector_name=self.sector_name,
         )
         print(f"[PDF Compiler] Output PDF successfully created at: {compiled_pdf_path}")
 

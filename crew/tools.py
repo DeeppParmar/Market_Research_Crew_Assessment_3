@@ -16,9 +16,15 @@ def calculate_financial_metrics(csv_path: str = "data/mock_financials.csv") -> s
     """Loads corporate metrics from CSV and returns summary statistics as Markdown."""
     target_path = csv_path.strip().strip("'\"") if csv_path else ""
     if not target_path or not os.path.exists(target_path):
-        target_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "mock_financials.csv")
-        if not os.path.exists(target_path):
-            target_path = "data/mock_financials.csv"
+        for candidate in [
+            "data/active_sector_financials.csv",
+            os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "active_sector_financials.csv"),
+            "data/mock_financials.csv",
+            os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "mock_financials.csv"),
+        ]:
+            if os.path.exists(candidate):
+                target_path = candidate
+                break
 
     df = pd.read_csv(target_path)
     summary = df.describe().to_markdown()
