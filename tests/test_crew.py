@@ -66,8 +66,9 @@ def test_benchmarking_tracker():
             os.remove(bench_file)
 
 
-def test_end_to_end_crew_run():
+def test_end_to_end_crew_run(monkeypatch):
     """Verifies full execution pipeline run, generating markdown, benchmarks, and PDF."""
+    monkeypatch.setenv("MOCK_EXECUTION", "true")
     with tempfile.TemporaryDirectory() as temp_dir:
         pdf_out = os.path.join(temp_dir, "test_market_report.pdf")
         bench_out = os.path.join(temp_dir, "test_benchmarks.json")

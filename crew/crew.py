@@ -2,7 +2,6 @@ import os
 import sys
 import time
 import logging
-import concurrent.futures
 from typing import Optional, Dict, Any, Tuple
 from dotenv import load_dotenv
 
@@ -161,20 +160,13 @@ Using audited financial filings processed through the Pandas analytical pipeline
         report_text = None
         if self._has_valid_api_key():
             print(f"\n[Manager LLM] Initializing live CrewAI hierarchical workflow (manager_llm='{self.model_name}')...")
-            executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
-            future = executor.submit(self.crew.kickoff, {"query": self.query, "csv_path": self.csv_path})
             try:
-                timeout_sec = int(os.getenv("LIVE_API_TIMEOUT", "6"))
-                crew_output = future.result(timeout=timeout_sec)
-                report_text = str(crew_output.raw if hasattr(crew_output, "raw") else crew_output)
-            except concurrent.futures.TimeoutError:
-                print(f"[Notice] Upstream LLM provider latency/503 spike detected. Transitioning to resilient hierarchical workflow...")
-                report_text = None
+                with self.tracker.track("Hierarchical Multi-Agent Crew Execution", "Hierarchical Supervisor"):
+                    crew_output = self.crew.kickoff(inputs={"query": self.query, "csv_path": self.csv_path})
+                    report_text = str(crew_output.raw if hasattr(crew_output, "raw") else crew_output)
             except Exception as e:
                 print(f"[Notice] Live API execution returned: {e}. Transitioning to resilient hierarchical workflow...")
                 report_text = None
-            finally:
-                executor.shutdown(wait=False, cancel_futures=True)
 
         if report_text is None:
             report_text = self._execute_simulated_hierarchical_workflow()
