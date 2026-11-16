@@ -15,7 +15,7 @@ cls
 echo ===============================================================================
 echo            CREWAI MULTI-AGENT MARKET RESEARCH ^& REPORT SYSTEM
 echo ===============================================================================
-echo   Status : Ready ^| Model: Gemini 3.8 Flash / OpenAI ^| Process: Hierarchical
+echo   Status : Ready ^| Model: Gemini 3.1 Flash / OpenAI ^| Process: Hierarchical
 echo ===============================================================================
 echo.
 echo   [1] Generate Market Report (Auto-Opens PDF on completion)

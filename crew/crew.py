@@ -45,7 +45,7 @@ class MarketResearchCrew:
         self.tracker = BenchmarkTracker(output_file=benchmarks_path)
         
         # Configure LLMs
-        self.model_name = manager_llm_model or os.getenv("LLM_MODEL") or os.getenv("OPENAI_MODEL_NAME", "gemini/gemini-3.8-flash")
+        self.model_name = manager_llm_model or os.getenv("LLM_MODEL") or os.getenv("OPENAI_MODEL_NAME", "gemini/gemini-3.1-flash-lite")
         self.configured_llm = get_configured_llm(self.model_name)
         
         # Initialize specialized agents

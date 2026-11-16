@@ -19,7 +19,7 @@ def get_configured_llm(model_name: Optional[str] = None) -> LLM:
     """Returns configured LLM instance (Gemini, OpenAI, or local fallback)."""
     gemini_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
     if gemini_key and gemini_key.strip():
-        model = model_name or os.getenv("LLM_MODEL", "gemini/gemini-3.8-flash")
+        model = model_name or os.getenv("LLM_MODEL", "gemini/gemini-3.1-flash-lite")
         if "gemini" in model and not model.startswith("gemini/"):
             model = f"gemini/{model}"
         return LLM(model=model, api_key=gemini_key.strip())
