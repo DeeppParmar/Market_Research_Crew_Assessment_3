@@ -25,7 +25,7 @@ echo       - Automatically launches 'market_report.pdf' upon completion
 echo.
 echo   [2] Generate Report with Custom Topic
 echo       - Prompts for custom sector/company query and executes full pipeline
-echo       - Examples: "Semiconductor ^& AI Foundry Q3", "Cloud Hyperscaler Capex",
+echo       - Examples: "Semiconductor & AI Foundry Q3", "Cloud Hyperscaler Capex",
 echo                   "Electric Vehicles ^& Battery Tech", "Cybersecurity SaaS Valuation"
 echo.
 echo   [3] Run Automated Test Suite (Pytest)
@@ -182,7 +182,7 @@ echo     run.bat
 echo.
 echo   Direct Command Examples:
 echo     run.bat run                                (Runs default Tech Sector analysis)
-echo     run.bat run "Semiconductor ^& AI Hardware"  (Runs with custom query)
+echo     run.bat run "Semiconductor & AI Hardware"  (Runs with custom query)
 echo     run.bat run "Cloud Hyperscalers Capex"     (Runs with cloud capex topic)
 echo     run.bat test                               (Runs 9 automated pytest tests)
 echo     run.bat setup                              (Installs all dependencies)
