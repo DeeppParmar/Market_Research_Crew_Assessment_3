@@ -8,14 +8,22 @@ load_dotenv()
 
 
 def ensure_env_key():
-    """Ensures OPENAI_API_KEY is defined in environment to prevent Agent Pydantic validation error when offline."""
-    key = os.getenv("OPENAI_API_KEY")
-    if not key or not key.strip() or key.startswith("your_"):
+    """Ensures environment keys are present so CrewAI Agent models initialize properly."""
+    gemini_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+    openai_key = os.getenv("OPENAI_API_KEY")
+    if not (gemini_key and gemini_key.strip()) and not (openai_key and openai_key.strip()):
         os.environ["OPENAI_API_KEY"] = "mock-openai-key-for-offline-eval"
 
 
 def get_configured_llm(model_name: Optional[str] = None) -> LLM:
-    """Returns configured LLM instance or a fallback LLM for offline testing."""
+    """Returns configured LLM instance (Gemini, OpenAI, or local fallback)."""
+    gemini_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+    if gemini_key and gemini_key.strip():
+        model = model_name or os.getenv("LLM_MODEL", "gemini/gemini-3.8-flash")
+        if "gemini" in model and not model.startswith("gemini/"):
+            model = f"gemini/{model}"
+        return LLM(model=model, api_key=gemini_key.strip())
+
     ensure_env_key()
     api_key = os.getenv("OPENAI_API_KEY")
     model = model_name or os.getenv("OPENAI_MODEL_NAME", "gpt-4o-mini")

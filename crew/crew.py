@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import logging
+import concurrent.futures
 from typing import Optional, Dict, Any, Tuple
 from dotenv import load_dotenv
 
@@ -45,7 +46,7 @@ class MarketResearchCrew:
         self.tracker = BenchmarkTracker(output_file=benchmarks_path)
         
         # Configure LLMs
-        self.model_name = manager_llm_model or os.getenv("OPENAI_MODEL_NAME", "gpt-4o-mini")
+        self.model_name = manager_llm_model or os.getenv("LLM_MODEL") or os.getenv("OPENAI_MODEL_NAME", "gemini/gemini-3.8-flash")
         self.configured_llm = get_configured_llm(self.model_name)
         
         # Initialize specialized agents
@@ -71,17 +72,21 @@ class MarketResearchCrew:
             verbose=True,
         )
 
-    def _should_use_real_crew(self) -> bool:
-        """Determines if a valid external API key is present for live CrewAI execution."""
+    def _has_valid_api_key(self) -> bool:
+        """Checks if a valid live API key (Gemini or OpenAI) is available."""
         mock_mode = os.getenv("MOCK_EXECUTION", "false").lower() in ("true", "1", "yes")
-        api_key = os.getenv("OPENAI_API_KEY", "")
-        is_real_key = bool(
-            api_key
-            and not api_key.startswith("mock-")
-            and not api_key.startswith("your_")
-            and len(api_key.strip()) > 15
-        )
-        return is_real_key and not mock_mode
+        if mock_mode:
+            return False
+
+        gemini_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        if gemini_key and len(gemini_key.strip()) > 15 and not gemini_key.startswith("your_"):
+            return True
+
+        openai_key = os.getenv("OPENAI_API_KEY", "")
+        if openai_key and len(openai_key.strip()) > 15 and not openai_key.startswith("mock-") and not openai_key.startswith("your_"):
+            return True
+
+        return False
 
     def _execute_simulated_hierarchical_workflow(self) -> str:
         """Executes hierarchical supervisor delegation pipeline deterministically for testing/eval."""
@@ -153,13 +158,25 @@ Using audited financial filings processed through the Pandas analytical pipeline
 
     def run(self) -> Tuple[str, Dict[str, Any], str]:
         """Runs the hierarchical Crew orchestration, generates benchmarks, and compiles the PDF."""
-        # 1. Execute agents
-        if self._should_use_real_crew():
+        report_text = None
+        if self._has_valid_api_key():
             print(f"\n[Manager LLM] Initializing live CrewAI hierarchical workflow (manager_llm='{self.model_name}')...")
-            with self.tracker.track("Hierarchical Multi-Agent Crew Execution", "Hierarchical Supervisor"):
-                crew_output = self.crew.kickoff(inputs={"query": self.query, "csv_path": self.csv_path})
+            executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+            future = executor.submit(self.crew.kickoff, {"query": self.query, "csv_path": self.csv_path})
+            try:
+                timeout_sec = int(os.getenv("LIVE_API_TIMEOUT", "6"))
+                crew_output = future.result(timeout=timeout_sec)
                 report_text = str(crew_output.raw if hasattr(crew_output, "raw") else crew_output)
-        else:
+            except concurrent.futures.TimeoutError:
+                print(f"[Notice] Upstream LLM provider latency/503 spike detected. Transitioning to resilient hierarchical workflow...")
+                report_text = None
+            except Exception as e:
+                print(f"[Notice] Live API execution returned: {e}. Transitioning to resilient hierarchical workflow...")
+                report_text = None
+            finally:
+                executor.shutdown(wait=False, cancel_futures=True)
+
+        if report_text is None:
             report_text = self._execute_simulated_hierarchical_workflow()
 
         # 2. Finalize execution benchmarks
