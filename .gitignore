@@ -16,6 +16,7 @@ env/
 
 # Data outputs & logs (keep sample_outputs versioned)
 output/
+market_report.pdf
 benchmarks.json
 *.log
 
